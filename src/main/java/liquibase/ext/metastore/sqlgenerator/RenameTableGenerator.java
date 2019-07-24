@@ -11,6 +11,10 @@ import liquibase.statement.core.RenameTableStatement;
 import liquibase.structure.core.Relation;
 import liquibase.structure.core.Table;
 
+import java.text.MessageFormat;
+
+import static java.text.MessageFormat.format;
+
 public class RenameTableGenerator extends AbstractSqlGenerator<RenameTableStatement> {
 
     @Override
@@ -33,8 +37,9 @@ public class RenameTableGenerator extends AbstractSqlGenerator<RenameTableStatem
 
     @Override
     public Sql[] generateSql(RenameTableStatement statement, Database database, SqlGeneratorChain sqlGeneratorChain) {
-        String sql = "ALTER TABLE " + database.escapeTableName(statement.getCatalogName(), statement.getSchemaName(),
-                statement.getOldTableName()) + " RENAME TO " + database.escapeObjectName(statement.getNewTableName(), Table.class);
+        String sql = format("ALTER TABLE {0} RENAME TO {1}",
+                database.escapeTableName(statement.getCatalogName(), statement.getSchemaName(), statement.getOldTableName()),
+                database.escapeObjectName(statement.getNewTableName(), Table.class));
         return new Sql[]{
                 new UnparsedSql(sql,
                         fetchAffectedOldTable(statement),

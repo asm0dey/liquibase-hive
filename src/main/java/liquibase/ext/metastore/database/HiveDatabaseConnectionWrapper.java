@@ -8,7 +8,7 @@ import org.apache.hive.jdbc.HiveConnection;
 public class HiveDatabaseConnectionWrapper extends JdbcConnection {
     private JdbcConnection conn;
 
-    public  HiveDatabaseConnectionWrapper(JdbcConnection conn) {
+    public HiveDatabaseConnectionWrapper(JdbcConnection conn) {
         super(conn.getUnderlyingConnection());
         this.conn = conn;
     }

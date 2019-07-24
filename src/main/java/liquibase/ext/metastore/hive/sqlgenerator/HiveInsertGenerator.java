@@ -13,7 +13,9 @@ import liquibase.statement.DatabaseFunction;
 import liquibase.structure.core.Relation;
 import liquibase.structure.core.Table;
 
+import java.text.MessageFormat;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 public class HiveInsertGenerator extends AbstractSqlGenerator<HiveInsertStatement> {
 
@@ -39,51 +41,39 @@ public class HiveInsertGenerator extends AbstractSqlGenerator<HiveInsertStatemen
     @Override
     public Sql[] generateSql(HiveInsertStatement statement, Database database, SqlGeneratorChain sqlGeneratorChain) {
 
-        StringBuilder sql = new StringBuilder();
 
-        generateHeader(sql, statement, database);
-        generateValues(sql, statement, database);
+        String tableName = database.escapeTableName(statement.getCatalogName(), statement.getSchemaName(), statement.getTableName());
+        String sql = MessageFormat.format("INSERT INTO {0} VALUES {1}", tableName, generateValues(statement, database));
 
-        return new Sql[]{new UnparsedSql(sql.toString(), getAffectedTable(statement))};
+        return new Sql[]{new UnparsedSql(sql, getAffectedTable(statement))};
     }
 
-    private void generateHeader(StringBuilder sql, HiveInsertStatement statement, Database database) {
-        sql.append("INSERT INTO ")
-                .append(database.escapeTableName(statement.getCatalogName(), statement.getSchemaName(), statement.getTableName()))
-                .append(" VALUES ");
+    private String generateValues(HiveInsertStatement statement, Database database) {
+        return statement.getColumnValues()
+                .stream()
+                .map(it -> plainSQLByNewValue(database, it))
+                .collect(Collectors.joining(", ", "(", ")"));
+
     }
 
-    private void generateValues(StringBuilder sql, HiveInsertStatement statement, Database database) {
-        sql.append("(");
-
-        for (Object newValue : statement.getColumnValues()) {
-            if (newValue == null || newValue.toString().equalsIgnoreCase("NULL")) {
-                sql.append("NULL");
-            } else if (newValue instanceof String && !looksLikeFunctionCall(((String) newValue), database)) {
-                sql.append(DataTypeFactory.getInstance().fromObject(newValue, database).objectToSql(newValue, database));
-            } else if (newValue instanceof Date) {
-                sql.append(database.getDateLiteral(((Date) newValue)));
-            } else if (newValue instanceof Boolean) {
-                if (((Boolean) newValue)) {
-                    sql.append(DataTypeFactory.getInstance().getTrueBooleanValue(database));
-                } else {
-                    sql.append(DataTypeFactory.getInstance().getFalseBooleanValue(database));
-                }
-            } else if (newValue instanceof DatabaseFunction) {
-                sql.append(database.generateDatabaseFunctionValue((DatabaseFunction) newValue));
+    private String plainSQLByNewValue(Database database, Object newValue) {
+        if (newValue == null || newValue.toString().equalsIgnoreCase("NULL")) {
+            return "NULL";
+        } else if (newValue instanceof String && !looksLikeFunctionCall(((String) newValue), database)) {
+            return DataTypeFactory.getInstance().fromObject(newValue, database).objectToSql(newValue, database);
+        } else if (newValue instanceof Date) {
+            return database.getDateLiteral(((Date) newValue));
+        } else if (newValue instanceof Boolean) {
+            if (((Boolean) newValue)) {
+                return DataTypeFactory.getInstance().getTrueBooleanValue(database);
             } else {
-                sql.append(newValue);
+                return DataTypeFactory.getInstance().getFalseBooleanValue(database);
             }
-            sql.append(", ");
+        } else if (newValue instanceof DatabaseFunction) {
+            return database.generateDatabaseFunctionValue((DatabaseFunction) newValue);
+        } else {
+            return newValue.toString();
         }
-
-        sql.deleteCharAt(sql.lastIndexOf(" "));
-        int lastComma = sql.lastIndexOf(",");
-        if (lastComma >= 0) {
-            sql.deleteCharAt(lastComma);
-        }
-
-        sql.append(")");
     }
 
     private Relation getAffectedTable(HiveInsertStatement statement) {

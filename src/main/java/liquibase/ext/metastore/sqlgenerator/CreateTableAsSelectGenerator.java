@@ -11,6 +11,9 @@ import liquibase.sqlgenerator.core.AbstractSqlGenerator;
 import liquibase.structure.core.Relation;
 import liquibase.structure.core.Table;
 
+import java.text.MessageFormat;
+import java.util.stream.Collectors;
+
 import static liquibase.util.SqlUtil.replacePredicatePlaceholders;
 
 public class CreateTableAsSelectGenerator extends AbstractSqlGenerator<CreateTableAsSelectStatement> {
@@ -34,50 +37,27 @@ public class CreateTableAsSelectGenerator extends AbstractSqlGenerator<CreateTab
 
     @Override
     public Sql[] generateSql(CreateTableAsSelectStatement statement, Database database, SqlGeneratorChain sqlGeneratorChain) {
-        StringBuilder sql = new StringBuilder("CREATE TABLE ")
-                .append(
-                        database
-                                .escapeTableName(
-                                        statement.getCatalogName(),
-                                        statement.getSchemaName(),
-                                        statement.getDestTableName()
-                                )
-                )
-                .append(" AS SELECT ");
-        generateColumnNames(sql, statement, database);
-        sql
-                .append(" FROM ")
-                .append(
-                        database.escapeTableName(
-                                statement.getCatalogName(),
-                                statement.getSchemaName(),
-                                statement.getTableName()
-                        )
-                );
+        String tablename = database.escapeTableName(statement.getCatalogName(), statement.getSchemaName(), statement.getDestTableName());
+        String columnNames = generateColumnNames(statement, database);
+        String fromTableName = database.escapeTableName(statement.getCatalogName(), statement.getSchemaName(), statement.getTableName());
+        String sql = MessageFormat.format("CREATE TABLE {0} AS SELECT {1} FROM {2}", tablename, columnNames, fromTableName);
         if (statement.getWhereCondition() != null) {
-            sql
-                    .append(" WHERE ")
-                    .append(
-                            replacePredicatePlaceholders(
-                                    database,
-                                    statement.getWhereCondition(),
-                                    statement.getWhereColumnNames(),
-                                    statement.getWhereParameters()
-                            )
-                    );
+            sql += " WHERE " + replacePredicatePlaceholders(
+                    database,
+                    statement.getWhereCondition(),
+                    statement.getWhereColumnNames(),
+                    statement.getWhereParameters()
+            );
         }
-        return new Sql[]{new UnparsedSql(sql.toString(), fetchAffectedTable(statement))};
+        return new Sql[]{new UnparsedSql(sql, fetchAffectedTable(statement))};
     }
 
-    private void generateColumnNames(StringBuilder sql, CreateTableAsSelectStatement statement, Database database) {
-        for (String column : statement.getColumnNames()) {
-            sql.append(database.escapeColumnName(statement.getCatalogName(), statement.getSchemaName(), statement.getTableName(), column)).append(", ");
-        }
-        sql.deleteCharAt(sql.lastIndexOf(" "));
-        int lastComma = sql.lastIndexOf(",");
-        if (lastComma >= 0) {
-            sql.deleteCharAt(lastComma);
-        }
+    private String generateColumnNames(CreateTableAsSelectStatement statement, Database database) {
+        return statement
+                .getColumnNames()
+                .stream()
+                .map(it -> database.escapeColumnName(statement.getCatalogName(), statement.getSchemaName(), statement.getTableName(), it))
+                .collect(Collectors.joining(", "));
     }
 
     private Relation fetchAffectedTable(CreateTableAsSelectStatement statement) {

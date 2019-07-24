@@ -17,6 +17,8 @@ import liquibase.statement.core.LockDatabaseChangeLogStatement;
 import liquibase.statement.core.SelectFromDatabaseChangeLogLockStatement;
 import liquibase.statement.core.UnlockDatabaseChangeLogStatement;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -41,18 +43,19 @@ public class MetastoreLockService extends StandardLockService {
     @Override
     public boolean hasDatabaseChangeLogLockTable() throws DatabaseException {
         boolean hasChangeLogLockTable = false;
-        try (Statement statement = ((HiveDatabase) database).getStatement()) {
+        try (Connection con = ((HiveDatabase) database).connect();
+             Statement statement = con.createStatement()) {
             LOG.info("Looking for table '" + database.getDatabaseChangeLogLockTableName() + "'");
-            statement.executeQuery(format("SELECT id FROM {0}", database.escapeTableName(database.getLiquibaseCatalogName(), database.getLiquibaseSchemaName(), database.getDatabaseChangeLogLockTableName())));
-            hasChangeLogLockTable = true;
-        } catch (SQLException e) {
-            LOG.info("Table '" + database.getDatabaseChangeLogLockTableName() + "' doesn't exists in hive metastore.");
-            hasChangeLogLockTable = false;
-        } catch (ClassNotFoundException e) {
-            LOG.warning("Table '" + database.getDatabaseChangeLogLockTableName() + "' doesn't eixsts in hive metastore.", e);
-            hasChangeLogLockTable = false;
-        } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
+            try (ResultSet set = statement.executeQuery(format("SELECT id FROM {0}", database.escapeTableName(database.getLiquibaseCatalogName(), database.getLiquibaseSchemaName(), database.getDatabaseChangeLogLockTableName())))) {
+                hasChangeLogLockTable = true;
+
+            } catch (SQLException e) {
+                LOG.info("Table '" + database.getDatabaseChangeLogLockTableName() + "' doesn't exists in hive metastore.");
+                hasChangeLogLockTable = false;
+
+            }
+        } catch (InstantiationException | IllegalAccessException | SQLException e) {
+            LOG.warning("can't perform query", e);
         }
         return hasChangeLogLockTable;
     }

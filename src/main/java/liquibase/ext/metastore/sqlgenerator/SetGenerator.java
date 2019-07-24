@@ -10,6 +10,8 @@ import liquibase.sqlgenerator.SqlGeneratorChain;
 import liquibase.sqlgenerator.core.AbstractSqlGenerator;
 import liquibase.structure.core.Schema;
 
+import java.text.MessageFormat;
+
 public class SetGenerator extends AbstractSqlGenerator<SetStatement> {
 
     @Override
@@ -32,7 +34,7 @@ public class SetGenerator extends AbstractSqlGenerator<SetStatement> {
 
     @Override
     public Sql[] generateSql(SetStatement statement, Database database, SqlGeneratorChain sqlGeneratorChain) {
-        String sql = "SET " + statement.getQueryOption() + "=" + statement.getOptionValue();
+        String sql = MessageFormat.format("SET {0}={1}", statement.getQueryOption(), statement.getOptionValue());
         return new Sql[]{new UnparsedSql(sql, new Schema().getName())};
     }
 }

@@ -7,6 +7,8 @@ import liquibase.ext.metastore.hive.database.HiveDatabase;
 import liquibase.sqlgenerator.core.AddColumnGenerator;
 import liquibase.statement.core.AddColumnStatement;
 
+import static java.text.MessageFormat.format;
+
 public class MetastoreAddColumnGenerator extends AddColumnGenerator {
 
     @Override
@@ -22,6 +24,8 @@ public class MetastoreAddColumnGenerator extends AddColumnGenerator {
     @Override
     protected String generateSingleColumnSQL(AddColumnStatement statement, Database database) {
         DatabaseDataType databaseColumnType = DataTypeFactory.getInstance().fromDescription(statement.getColumnType(), database).toDatabaseDataType(database);
-        return " ADD COLUMNS (" + database.escapeColumnName(statement.getCatalogName(), statement.getSchemaName(), statement.getTableName(), statement.getColumnName()) + " " + databaseColumnType + ")";
+        return format(" ADD COLUMNS ({0} {1})",
+                database.escapeColumnName(statement.getCatalogName(), statement.getSchemaName(), statement.getTableName(), statement.getColumnName()),
+                databaseColumnType);
     }
 }

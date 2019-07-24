@@ -4,7 +4,7 @@ import liquibase.database.Database;
 import liquibase.exception.UnexpectedLiquibaseException;
 import liquibase.exception.ValidationErrors;
 import liquibase.ext.metastore.hive.database.HiveDatabase;
-import liquibase.logging.LogFactory;
+import liquibase.logging.LogService;
 import liquibase.logging.Logger;
 import liquibase.sql.Sql;
 import liquibase.sql.UnparsedSql;
@@ -14,17 +14,21 @@ import liquibase.statement.core.DropColumnStatement;
 import liquibase.structure.core.Column;
 import liquibase.structure.core.Table;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.joining;
 
 public class HiveDropColumnGenerator extends AbstractSqlGenerator<DropColumnStatement> {
-    private static final Logger LOG = LogFactory.getInstance().getLog();
+    private static final Logger LOG = LogService.getLog(HiveDropColumnGenerator.class);
 
     @Override
     public int getPriority() {
@@ -66,42 +70,27 @@ public class HiveDropColumnGenerator extends AbstractSqlGenerator<DropColumnStat
 
     @Override
     public Sql[] generateSql(DropColumnStatement dropColumnStatement, Database database, SqlGeneratorChain sqlGeneratorChain) {
-        Map<String, String> columnsPreserved = null;
-        columnsPreserved = columnsMap((HiveDatabase) database, dropColumnStatement);
+        Map<String, String> columnsPreserved = columnsMap((HiveDatabase) database, dropColumnStatement);
         return generateMultipleColumnSql(dropColumnStatement, database, columnsPreserved);
     }
 
     private Map<String, String> columnsMap(HiveDatabase database, DropColumnStatement dropColumnStatement) {
-        String query = MessageFormat.format("DESCRIBE {0}", database.escapeObjectName(dropColumnStatement.getTableName(), Table.class));
+        String tableName = database.escapeObjectName(dropColumnStatement.getTableName(), Table.class);
+        String query = MessageFormat.format("DESCRIBE {0}", tableName);
         Map<String, String> mapOfColNameDataTypes = null;
-        Statement statement = null;
-        ResultSet resultSet = null;
         try {
-            mapOfColNameDataTypes = new HashMap<String, String>();
-            statement = database.getStatement();
-            resultSet = statement.executeQuery(query);
-            while (resultSet.next()) {
-                String colName = resultSet.getString("col_name");
-                String dataType = resultSet.getString("data_type");
-                mapOfColNameDataTypes.put(colName.toUpperCase(), dataType);
+            mapOfColNameDataTypes = new HashMap<>();
+            try (Connection con = database.connect();
+                 Statement statement = con.createStatement();
+                 ResultSet resultSet = statement.executeQuery(query)) {
+                while (resultSet.next()) {
+                    String colName = resultSet.getString("col_name");
+                    String dataType = resultSet.getString("data_type");
+                    mapOfColNameDataTypes.put(colName.toUpperCase(), dataType);
+                }
             }
         } catch (Exception e) {
             LOG.warning("can't perform query", e);
-        } finally {
-            if (resultSet != null) {
-                try {
-                    resultSet.close();
-                } catch (SQLException e) {
-                    LOG.warning("Can't close cursor");
-                }
-            }
-            if (statement != null) {
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    LOG.warning("Can't close cursor");
-                }
-            }
         }
         return mapOfColNameDataTypes;
     }
@@ -110,8 +99,8 @@ public class HiveDropColumnGenerator extends AbstractSqlGenerator<DropColumnStat
         if (columnsPreserved == null) {
             throw new UnexpectedLiquibaseException("no columns to preserve");
         }
-        List<Sql> result = new ArrayList<Sql>();
-        Map<String, String> columnsPreservedCopy = new HashMap<String, String>(columnsPreserved);
+        List<Sql> result = new ArrayList<>();
+        Map<String, String> columnsPreservedCopy = new HashMap<>(columnsPreserved);
         StringBuilder alterTable;
         List<DropColumnStatement> columns = null;
 
@@ -120,25 +109,21 @@ public class HiveDropColumnGenerator extends AbstractSqlGenerator<DropColumnStat
             for (DropColumnStatement statement : columns) {
                 columnsPreservedCopy.remove(statement.getColumnName());
             }
-            alterTable = new StringBuilder("ALTER TABLE " + database.escapeTableName(columns.get(0).getCatalogName(), columns.get(0).getSchemaName(), columns.get(0).getTableName()) + " REPLACE COLUMNS (");
+            String tableName = database.escapeTableName(columns.get(0).getCatalogName(), columns.get(0).getSchemaName(), columns.get(0).getTableName());
+            alterTable = new StringBuilder(MessageFormat.format("ALTER TABLE {0} REPLACE COLUMNS ", tableName));
         } else {
             columnsPreservedCopy.remove(dropColumnStatement.getColumnName());
-            alterTable = new StringBuilder("ALTER TABLE " + database.escapeTableName(dropColumnStatement.getCatalogName(), dropColumnStatement.getSchemaName(), dropColumnStatement.getTableName()) + " REPLACE COLUMNS (");
+            String tableName = database.escapeTableName(dropColumnStatement.getCatalogName(), dropColumnStatement.getSchemaName(), dropColumnStatement.getTableName());
+            alterTable = new StringBuilder(MessageFormat.format("ALTER TABLE {0} REPLACE COLUMNS ", tableName));
         }
 
-        int i = 0;
-        for (String columnName : columnsPreservedCopy.keySet()) {
-            alterTable
-                    .append(database.escapeObjectName(columnName, Column.class))
-                    .append(" ")
-                    .append(columnsPreservedCopy.get(columnName));
-            if (i < columnsPreservedCopy.size() - 1) {
-                alterTable.append(",");
-            } else {
-                alterTable.append(")");
-            }
-            i++;
-        }
+        String columnsDef = columnsPreservedCopy
+                .entrySet()
+                .stream()
+                .map(entry -> database.escapeObjectName(entry.getKey(), Column.class) + " " + entry.getValue())
+                .collect(joining(",", "(", ")"));
+
+        alterTable.append(columnsDef);
 
         if (dropColumnStatement.isMultiple()) {
             result.add(new UnparsedSql(alterTable.toString(), getAffectedColumns(columns)));

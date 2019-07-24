@@ -8,6 +8,7 @@ import liquibase.ext.metastore.database.HiveDatabaseConnectionWrapper;
 import liquibase.logging.LogService;
 import liquibase.logging.Logger;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.List;
@@ -169,36 +170,27 @@ public class HiveDatabase extends AbstractJdbcDatabase {
         super.setConnection(new HiveDatabaseConnectionWrapper((JdbcConnection) conn));
     }
 
-    @Override
-    public void setAutoCommit(boolean b) throws DatabaseException {
-    }
-
-    public Statement getStatement() throws ClassNotFoundException, SQLException, IllegalAccessException, InstantiationException {
-        String url = super.getConnection().getURL();
-        Driver driver = (Driver) Class.forName(getDefaultDriver(url)).newInstance();
-        Connection con = driver.connect(url, System.getProperties());
-        return con.createStatement();
-    }
-
-    protected String getSchemaDatabaseSpecific(String query) {
-        Statement statement = null;
+    public Connection connect() throws SQLException, IllegalAccessException, InstantiationException {
+        Driver driver;
         try {
-            statement = getStatement();
-            ResultSet resultSet = statement.executeQuery(query);
+            driver = (Driver) Class.forName(getDefaultDriver(super.getConnection().getURL())).getDeclaredConstructor().newInstance();
+        } catch (InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return driver.connect(super.getConnection().getURL(), System.getProperties());
+    }
+
+    private String getSchemaDatabaseSpecific(String query) {
+
+        try (Connection con = connect();
+             Statement statement = con.createStatement();
+             ResultSet resultSet = statement.executeQuery(query)) {
             resultSet.next();
             String schema = resultSet.getString(1);
             LOG.info("Schema name is '" + schema + "'");
             return schema;
         } catch (Exception e) {
             LOG.info("Can't get default schema:", e);
-        } finally {
-            if (statement != null) {
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    LOG.warning("Can't close cursor", e);
-                }
-            }
         }
         return null;
     }

@@ -25,27 +25,14 @@ import liquibase.snapshot.SnapshotControl;
 import liquibase.snapshot.SnapshotGeneratorFactory;
 import liquibase.sqlgenerator.SqlGeneratorFactory;
 import liquibase.statement.SqlStatement;
-import liquibase.statement.core.AddColumnStatement;
-import liquibase.statement.core.CreateDatabaseChangeLogTableStatement;
-import liquibase.statement.core.DropTableStatement;
-import liquibase.statement.core.GetNextChangeSetSequenceValueStatement;
-import liquibase.statement.core.MarkChangeSetRanStatement;
-import liquibase.statement.core.RemoveChangeSetRanStatusStatement;
-import liquibase.statement.core.SelectFromDatabaseChangeLogStatement;
-import liquibase.statement.core.TagDatabaseStatement;
-import liquibase.statement.core.UpdateChangeSetChecksumStatement;
-import liquibase.statement.core.UpdateStatement;
+import liquibase.statement.core.*;
 import liquibase.structure.core.Column;
 import liquibase.structure.core.Table;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class HiveStandardChangeLogHistoryService extends AbstractChangeLogHistoryService {
 

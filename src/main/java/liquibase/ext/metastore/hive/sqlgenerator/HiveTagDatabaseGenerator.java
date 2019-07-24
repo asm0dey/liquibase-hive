@@ -15,6 +15,7 @@ import liquibase.statement.core.TagDatabaseStatement;
 import liquibase.structure.core.Column;
 import liquibase.structure.core.Table;
 
+import java.text.MessageFormat;
 import java.util.UUID;
 
 public class HiveTagDatabaseGenerator extends AbstractSqlGenerator<TagDatabaseStatement> {
@@ -51,8 +52,17 @@ public class HiveTagDatabaseGenerator extends AbstractSqlGenerator<TagDatabaseSt
                         "FROM " + tableNameEscaped + ")");
         InsertAsSelectStatement insertAsSelectStatement = new InsertAsSelectStatement(catalogName, schemaName, tableName, tempTable)
                 .addColumnNames("ID", "AUTHOR", "FILENAME", "DATEEXECUTED", "ORDEREXECUTED", "EXECTYPE", "MD5SUM", "DESCRIPTION", "COMMENTS", "'" + statement.getTag() + "'", "LIQUIBASE", "CONTEXTS", "LABELS", "DEPLOYMENT_ID")
-                .setWhereCondition(tableNameEscaped + "." + dateColumnNameEscaped + " IN (SELECT MAX(" + tableNameEscaped + "." + dateColumnNameEscaped + ") FROM " + tableNameEscaped + ") AND ("
-                        + tableNameEscaped + "." + tagColumnNameEscaped + " IS NULL OR " + tableNameEscaped + "." + tagColumnNameEscaped + " != ?)").addWhereParameters(statement.getTag());
+                .setWhereCondition(MessageFormat.format("{0}.{1} IN (SELECT MAX({2}.{3}) FROM {4}) AND ({5}.{6} IS NULL OR {7}.{8} != ?)",
+                        tableNameEscaped,
+                        dateColumnNameEscaped,
+                        tableNameEscaped,
+                        dateColumnNameEscaped,
+                        tableNameEscaped,
+                        tableNameEscaped,
+                        tagColumnNameEscaped,
+                        tableNameEscaped,
+                        tagColumnNameEscaped))
+                .addWhereParameters(statement.getTag());
 
         return CustomSqlGenerator.generateSql(database,
                 createTableAsSelectStatement,

@@ -43,6 +43,11 @@ public class CreateTableAsSelectStatement extends AbstractSqlStatement {
         return whereCondition;
     }
 
+    public CreateTableAsSelectStatement setWhereCondition(String whereCondition) {
+        this.whereCondition = whereCondition;
+        return this;
+    }
+
     public List<Object> getWhereParameters() {
         return whereParameters;
     }
@@ -53,11 +58,6 @@ public class CreateTableAsSelectStatement extends AbstractSqlStatement {
 
     public List<String> getWhereColumnNames() {
         return whereColumnNames;
-    }
-
-    public CreateTableAsSelectStatement setWhereCondition(String whereCondition) {
-        this.whereCondition = whereCondition;
-        return this;
     }
 
     public CreateTableAsSelectStatement addWhereParameters(Object... value) {
