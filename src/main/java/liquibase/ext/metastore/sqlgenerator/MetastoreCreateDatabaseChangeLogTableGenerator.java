@@ -2,7 +2,7 @@ package liquibase.ext.metastore.sqlgenerator;
 
 import liquibase.database.Database;
 import liquibase.datatype.DataTypeFactory;
-import liquibase.ext.metastore.database.HiveMetastoreDatabase;
+import liquibase.ext.metastore.hive.database.HiveDatabase;
 import liquibase.ext.metastore.utils.CustomSqlGenerator;
 import liquibase.ext.metastore.utils.UserSessionSettings;
 import liquibase.sql.Sql;
@@ -15,7 +15,7 @@ public class MetastoreCreateDatabaseChangeLogTableGenerator extends CreateDataba
 
     @Override
     public boolean supports(CreateDatabaseChangeLogTableStatement statement, Database database) {
-        return database instanceof HiveMetastoreDatabase && super.supports(statement, database);
+        return database instanceof HiveDatabase && super.supports(statement, database);
     }
 
     @Override

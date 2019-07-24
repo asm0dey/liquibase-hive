@@ -5,7 +5,7 @@ import liquibase.datatype.DataTypeInfo;
 import liquibase.datatype.DatabaseDataType;
 import liquibase.datatype.LiquibaseDataType;
 import liquibase.datatype.core.ClobType;
-import liquibase.ext.metastore.database.HiveMetastoreDatabase;
+import liquibase.ext.metastore.hive.database.HiveDatabase;
 
 @DataTypeInfo(name = "text", aliases = {"java.sql.Types.CLOB",
         "java.sql.Types.NCLOB",
@@ -18,7 +18,7 @@ public class MetastoreTextType extends ClobType {
 
     @Override
     public DatabaseDataType toDatabaseDataType(Database database) {
-        if (database instanceof HiveMetastoreDatabase) {
+        if (database instanceof HiveDatabase) {
             return new DatabaseDataType("STRING", getParameters());
         }
 

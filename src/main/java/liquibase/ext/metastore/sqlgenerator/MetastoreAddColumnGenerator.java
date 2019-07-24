@@ -3,7 +3,7 @@ package liquibase.ext.metastore.sqlgenerator;
 import liquibase.database.Database;
 import liquibase.datatype.DataTypeFactory;
 import liquibase.datatype.DatabaseDataType;
-import liquibase.ext.metastore.database.HiveMetastoreDatabase;
+import liquibase.ext.metastore.hive.database.HiveDatabase;
 import liquibase.sqlgenerator.core.AddColumnGenerator;
 import liquibase.statement.core.AddColumnStatement;
 
@@ -11,7 +11,7 @@ public class MetastoreAddColumnGenerator extends AddColumnGenerator {
 
     @Override
     public boolean supports(AddColumnStatement statement, Database database) {
-        return database instanceof HiveMetastoreDatabase && super.supports(statement, database);
+        return database instanceof HiveDatabase && super.supports(statement, database);
     }
 
     @Override

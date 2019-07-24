@@ -5,7 +5,7 @@ import liquibase.datatype.DataTypeInfo;
 import liquibase.datatype.DatabaseDataType;
 import liquibase.datatype.LiquibaseDataType;
 import liquibase.datatype.core.NumberType;
-import liquibase.ext.metastore.database.HiveMetastoreDatabase;
+import liquibase.ext.metastore.hive.database.HiveDatabase;
 
 @DataTypeInfo(name = "number", aliases = {"numeric",
         "java.sql.Types.NUMERIC"}, minParameters = 0, maxParameters = 1, priority = LiquibaseDataType.PRIORITY_DATABASE)
@@ -13,7 +13,7 @@ public class MetastoreNumberType extends NumberType {
 
     @Override
     public DatabaseDataType toDatabaseDataType(Database database) {
-        if (database instanceof HiveMetastoreDatabase) {
+        if (database instanceof HiveDatabase) {
             return new DatabaseDataType("DOUBLE", getParameters());
         }
 

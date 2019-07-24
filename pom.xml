@@ -11,10 +11,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <impala.jdbc.version>2.6.4</impala.jdbc.version>
-        <hive.jdbc.version>2.6.2</hive.jdbc.version>
-        <liquibase.version>3.10.3</liquibase.version>
-        <uber.jar.name>${project.name}.jar</uber.jar.name>
+        <liquibase.version>3.7.0</liquibase.version>
     </properties>
 
     <dependencies>
@@ -29,14 +26,8 @@
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-jdbc</artifactId>
-            <version>3.1.2</version>
-            <scope>runtime</scope>
-            <exclusions>
-              <exclusion>
-                  <groupId>jdk.tools</groupId> 
-                  <artifactId>jdk.tools</artifactId> 
-              </exclusion>
-            </exclusions>
+            <version>3.1.0.3.0.1.0-187</version>
+<!--            <scope>runtime</scope>-->
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -67,4 +58,10 @@
             </plugin>
         </plugins>
     </build>
+    <repositories>
+        <repository>
+            <id>HORTON</id>
+            <url>https://repo.hortonworks.com/content/repositories/releases/</url>
+        </repository>
+    </repositories>
 </project>

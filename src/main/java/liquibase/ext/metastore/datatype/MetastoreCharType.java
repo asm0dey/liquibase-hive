@@ -5,7 +5,7 @@ import liquibase.datatype.DataTypeInfo;
 import liquibase.datatype.DatabaseDataType;
 import liquibase.datatype.LiquibaseDataType;
 import liquibase.datatype.core.CharType;
-import liquibase.ext.metastore.database.HiveMetastoreDatabase;
+import liquibase.ext.metastore.hive.database.HiveDatabase;
 
 @DataTypeInfo(name = "char", aliases = {"java.sql.Types.CHAR",
         "java.sql.Types.NCHAR",
@@ -16,7 +16,7 @@ public class MetastoreCharType extends CharType {
 
     @Override
     public DatabaseDataType toDatabaseDataType(Database database) {
-        if (database instanceof HiveMetastoreDatabase) {
+        if (database instanceof HiveDatabase) {
             return new DatabaseDataType("STRING", getParameters());
         }
 

@@ -2,7 +2,7 @@ package liquibase.ext.metastore.sqlgenerator;
 
 import liquibase.database.Database;
 import liquibase.exception.ValidationErrors;
-import liquibase.ext.metastore.database.HiveMetastoreDatabase;
+import liquibase.ext.metastore.hive.database.HiveDatabase;
 import liquibase.ext.metastore.statement.CreateTableAsSelectStatement;
 import liquibase.sql.Sql;
 import liquibase.sql.UnparsedSql;
@@ -17,7 +17,7 @@ public class CreateTableAsSelectGenerator extends AbstractSqlGenerator<CreateTab
 
     @Override
     public boolean supports(CreateTableAsSelectStatement statement, Database database) {
-        return database instanceof HiveMetastoreDatabase && super.supports(statement, database);
+        return database instanceof HiveDatabase && super.supports(statement, database);
     }
 
     @Override

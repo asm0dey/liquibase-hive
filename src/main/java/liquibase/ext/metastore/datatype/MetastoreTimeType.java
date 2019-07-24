@@ -5,7 +5,7 @@ import liquibase.datatype.DataTypeInfo;
 import liquibase.datatype.DatabaseDataType;
 import liquibase.datatype.LiquibaseDataType;
 import liquibase.datatype.core.TimeType;
-import liquibase.ext.metastore.database.HiveMetastoreDatabase;
+import liquibase.ext.metastore.hive.database.HiveDatabase;
 
 @DataTypeInfo(name = "time", aliases = {"java.sql.Types.TIME",
         "java.util.Date",
@@ -14,7 +14,7 @@ public class MetastoreTimeType extends TimeType {
 
     @Override
     public DatabaseDataType toDatabaseDataType(Database database) {
-        if (database instanceof HiveMetastoreDatabase) {
+        if (database instanceof HiveDatabase) {
             return new DatabaseDataType("TIMESTAMP", getParameters());
         }
 

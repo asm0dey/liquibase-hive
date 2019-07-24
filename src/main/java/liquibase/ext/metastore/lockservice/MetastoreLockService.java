@@ -8,7 +8,7 @@ import liquibase.exception.LockException;
 import liquibase.executor.Executor;
 import liquibase.executor.ExecutorService;
 import liquibase.ext.metastore.configuration.HiveMetastoreConfiguration;
-import liquibase.ext.metastore.database.HiveMetastoreDatabase;
+import liquibase.ext.metastore.hive.database.HiveDatabase;
 import liquibase.lockservice.DatabaseChangeLogLock;
 import liquibase.lockservice.StandardLockService;
 import liquibase.logging.LogFactory;
@@ -19,7 +19,6 @@ import liquibase.statement.core.UnlockDatabaseChangeLogStatement;
 
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.MessageFormat;
 
 import static java.text.MessageFormat.format;
 
@@ -31,7 +30,7 @@ public class MetastoreLockService extends StandardLockService {
 
     @Override
     public boolean supports(Database database) {
-        return database instanceof HiveMetastoreDatabase;
+        return database instanceof HiveDatabase;
     }
 
     @Override
@@ -42,7 +41,7 @@ public class MetastoreLockService extends StandardLockService {
     @Override
     public boolean hasDatabaseChangeLogLockTable() throws DatabaseException {
         boolean hasChangeLogLockTable = false;
-        try (Statement statement = ((HiveMetastoreDatabase) database).getStatement()) {
+        try (Statement statement = ((HiveDatabase) database).getStatement()) {
             LOG.info("Looking for table '" + database.getDatabaseChangeLogLockTableName() + "'");
             statement.executeQuery(format("SELECT id FROM {0}", database.escapeTableName(database.getLiquibaseCatalogName(), database.getLiquibaseSchemaName(), database.getDatabaseChangeLogLockTableName())));
             hasChangeLogLockTable = true;

@@ -5,7 +5,7 @@ import liquibase.datatype.DataTypeInfo;
 import liquibase.datatype.DatabaseDataType;
 import liquibase.datatype.LiquibaseDataType;
 import liquibase.datatype.core.VarcharType;
-import liquibase.ext.metastore.database.HiveMetastoreDatabase;
+import liquibase.ext.metastore.hive.database.HiveDatabase;
 
 @DataTypeInfo(name = "varchar", aliases = {"java.sql.Types.VARCHAR",
         "java.sql.Types.LONGVARCHAR",
@@ -20,7 +20,7 @@ public class MetastoreVarcharType extends VarcharType {
 
     @Override
     public DatabaseDataType toDatabaseDataType(Database database) {
-        if (database instanceof HiveMetastoreDatabase) {
+        if (database instanceof HiveDatabase) {
             return new DatabaseDataType("STRING", getParameters());
         }
 
