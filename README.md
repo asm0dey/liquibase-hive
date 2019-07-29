@@ -5,13 +5,13 @@
     - [Liquibase-impala specific configuration](#liquibase-hive-specific-configuration)
 
 # About liquibase-hive
-Liquibase-impala is a [Liquibase](http://www.liquibase.org/) [extension](https://liquibase.jira.com/wiki/spaces/CONTRIB/overview), which adds support for Apache Hive.
+Liquibase-hive is a [Liquibase](http://www.liquibase.org/) [extension](https://liquibase.jira.com/wiki/spaces/CONTRIB/overview), which adds support for Apache Hive.
 
 # How to use
 
 ## with a Maven plugin
-To use liquibase-impala in concert with `liquibase-maven-plugin`:
-1. Make sure liquibase-impala is present in your local or remote (internal) Maven repo.
+To use liquibase-hive in concert with `liquibase-maven-plugin`:
+1. Make sure liquibase-hive is present in your local or remote (internal) Maven repo.
 1. Add the following to your `pom.xml` file:
     ```xml
     <build>
