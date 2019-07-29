@@ -1,10 +1,10 @@
 # Table of contents
-1. [About liquibase-impala](#about-liquibase-impala)
+1. [About liquibase-hive](#about-liquibase-hive)
 1. [How to use](#how-to-use)
     - [with a Maven plugin](#with-a-maven-plugin)
     - [Liquibase-impala specific configuration](#liquibase-hive-specific-configuration)
 
-# About liquibase-impala
+# About liquibase-hive
 Liquibase-impala is a [Liquibase](http://www.liquibase.org/) [extension](https://liquibase.jira.com/wiki/spaces/CONTRIB/overview), which adds support for Apache Hive.
 
 # How to use
