@@ -113,7 +113,7 @@ public class MetastoreLockService extends StandardLockService {
 
             Boolean locked = ExecutorService.getInstance().getExecutor(database).queryForObject(new SelectFromDatabaseChangeLogLockStatement("LOCKED"), Boolean.class);
 
-            if (locked) {
+            if (locked != null && locked) {
                 return false;
             } else {
 
