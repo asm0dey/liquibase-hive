@@ -17,6 +17,7 @@ import liquibase.structure.core.Table;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,8 +72,8 @@ public class HiveDropColumnGenerator extends AbstractSqlGenerator<DropColumnStat
     }
 
     private Map<String, String> columnsMap(HiveDatabase database, DropColumnStatement dropColumnStatement) {
-        String query = "DESCRIBE " + database.escapeObjectName(dropColumnStatement.getTableName(), Table.class);
-        Map mapOfColNameDataTypes = null;
+        String query = MessageFormat.format("DESCRIBE {0}", database.escapeObjectName(dropColumnStatement.getTableName(), Table.class));
+        Map<String, String> mapOfColNameDataTypes = null;
         Statement statement = null;
         ResultSet resultSet = null;
         try {
@@ -111,7 +112,7 @@ public class HiveDropColumnGenerator extends AbstractSqlGenerator<DropColumnStat
         }
         List<Sql> result = new ArrayList<Sql>();
         Map<String, String> columnsPreservedCopy = new HashMap<String, String>(columnsPreserved);
-        String alterTable;
+        StringBuilder alterTable;
         List<DropColumnStatement> columns = null;
 
         if (dropColumnStatement.isMultiple()) {
@@ -119,37 +120,38 @@ public class HiveDropColumnGenerator extends AbstractSqlGenerator<DropColumnStat
             for (DropColumnStatement statement : columns) {
                 columnsPreservedCopy.remove(statement.getColumnName());
             }
-            alterTable = "ALTER TABLE " + database.escapeTableName(columns.get(0).getCatalogName(), columns.get(0).getSchemaName(), columns.get(0).getTableName()) + " REPLACE COLUMNS (";
+            alterTable = new StringBuilder("ALTER TABLE " + database.escapeTableName(columns.get(0).getCatalogName(), columns.get(0).getSchemaName(), columns.get(0).getTableName()) + " REPLACE COLUMNS (");
         } else {
             columnsPreservedCopy.remove(dropColumnStatement.getColumnName());
-            alterTable = "ALTER TABLE " + database.escapeTableName(dropColumnStatement.getCatalogName(), dropColumnStatement.getSchemaName(), dropColumnStatement.getTableName()) + " REPLACE COLUMNS (";
+            alterTable = new StringBuilder("ALTER TABLE " + database.escapeTableName(dropColumnStatement.getCatalogName(), dropColumnStatement.getSchemaName(), dropColumnStatement.getTableName()) + " REPLACE COLUMNS (");
         }
 
         int i = 0;
         for (String columnName : columnsPreservedCopy.keySet()) {
-            alterTable += database.escapeObjectName(columnName, Column.class) + " " + columnsPreservedCopy.get(columnName);
+            alterTable
+                    .append(database.escapeObjectName(columnName, Column.class))
+                    .append(" ")
+                    .append(columnsPreservedCopy.get(columnName));
             if (i < columnsPreservedCopy.size() - 1) {
-                alterTable += ",";
+                alterTable.append(",");
             } else {
-                alterTable += ")";
+                alterTable.append(")");
             }
             i++;
         }
 
         if (dropColumnStatement.isMultiple()) {
-            result.add(new UnparsedSql(alterTable, getAffectedColumns(columns)));
+            result.add(new UnparsedSql(alterTable.toString(), getAffectedColumns(columns)));
         } else {
-            result.add(new UnparsedSql(alterTable, getAffectedColumn(dropColumnStatement)));
+            result.add(new UnparsedSql(alterTable.toString(), getAffectedColumn(dropColumnStatement)));
         }
-        return result.toArray(new Sql[result.size()]);
+        return result.toArray(new Sql[0]);
     }
 
     private Column[] getAffectedColumns(List<DropColumnStatement> columns) {
-        List<Column> affected = new ArrayList<Column>();
-        for (DropColumnStatement column : columns) {
-            affected.add(getAffectedColumn(column));
-        }
-        return affected.toArray(new Column[affected.size()]);
+        List<Column> affected = new ArrayList<>();
+        for (DropColumnStatement column : columns) affected.add(getAffectedColumn(column));
+        return affected.toArray(new Column[0]);
     }
 
     private Column getAffectedColumn(DropColumnStatement statement) {

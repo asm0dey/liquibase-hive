@@ -13,7 +13,7 @@ public class HiveDatabaseTest {
     @Test
     public void testGetDefaultDriver() {
         HiveDatabase database = new HiveDatabase();
-        assertEquals("com.cloudera.hive.jdbc41.HS2Driver", database.getDefaultDriver("jdbc:hive2://localhost:21050/test"));
+        assertEquals("org.apache.hive.jdbc.HiveDriver", database.getDefaultDriver("jdbc:hive2://localhost:21050/test"));
         assertNull(database.getDefaultDriver("jdbc:oracle://localhost;databaseName=liquibase"));
     }
 

@@ -1,5 +1,6 @@
 package liquibase.ext.metastore.hive.database;
 
+import liquibase.database.ObjectQuotingStrategy;
 import liquibase.ext.metastore.database.HiveMetastoreDatabase;
 
 import java.util.Arrays;
@@ -7,7 +8,7 @@ import java.util.Arrays;
 public class HiveDatabase extends HiveMetastoreDatabase {
 
     public HiveDatabase() {
-        super("Apache Hive", "jdbc:hive2", "com.cloudera.hive.jdbc41.HS2Driver");
+        super("Apache Hive", "jdbc:hive2", "org.apache.hive.jdbc.HiveDriver");
     }
 
     @Override
@@ -43,9 +44,19 @@ public class HiveDatabase extends HiveMetastoreDatabase {
 
     @Override
     protected String getConnectionSchemaName() {
-        String tokens[] = super.getConnection().getURL().split("\\/");
+        String[] tokens = super.getConnection().getURL().split("/");
         String dbName = tokens[tokens.length - 1].split(";")[0];
         String schema = getSchemaDatabaseSpecific("SHOW SCHEMAS LIKE '" + dbName + "'");
         return schema == null ? "default" : schema;
+    }
+
+    @Override
+    protected String getQuotingStartCharacter() {
+        return "`";
+    }
+
+    @Override
+    protected String getQuotingEndCharacter() {
+        return "`";
     }
 }

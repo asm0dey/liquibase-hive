@@ -19,6 +19,9 @@ import liquibase.statement.core.UnlockDatabaseChangeLogStatement;
 
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.MessageFormat;
+
+import static java.text.MessageFormat.format;
 
 public class MetastoreLockService extends StandardLockService {
 
@@ -39,11 +42,9 @@ public class MetastoreLockService extends StandardLockService {
     @Override
     public boolean hasDatabaseChangeLogLockTable() throws DatabaseException {
         boolean hasChangeLogLockTable = false;
-        Statement statement = null;
-        try {
-            statement = ((HiveMetastoreDatabase) database).getStatement();
+        try (Statement statement = ((HiveMetastoreDatabase) database).getStatement()) {
             LOG.info("Looking for table '" + database.getDatabaseChangeLogLockTableName() + "'");
-            statement.executeQuery("SELECT id FROM " + database.escapeTableName(database.getLiquibaseCatalogName(), database.getLiquibaseSchemaName(), database.getDatabaseChangeLogLockTableName()));
+            statement.executeQuery(format("SELECT id FROM {0}", database.escapeTableName(database.getLiquibaseCatalogName(), database.getLiquibaseSchemaName(), database.getDatabaseChangeLogLockTableName())));
             hasChangeLogLockTable = true;
         } catch (SQLException e) {
             LOG.info("Table '" + database.getDatabaseChangeLogLockTableName() + "' doesn't exists in hive metastore.");
@@ -51,18 +52,8 @@ public class MetastoreLockService extends StandardLockService {
         } catch (ClassNotFoundException e) {
             LOG.warning("Table '" + database.getDatabaseChangeLogLockTableName() + "' doesn't eixsts in hive metastore.", e);
             hasChangeLogLockTable = false;
-        } catch (InstantiationException e) {
+        } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } finally {
-            if (statement != null) {
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    LOG.warning("Can't close cursor", e);
-                }
-            }
         }
         return hasChangeLogLockTable;
     }
@@ -118,7 +109,7 @@ public class MetastoreLockService extends StandardLockService {
             database.rollback();
             init();
 
-            Boolean locked = (Boolean) ExecutorService.getInstance().getExecutor(database).queryForObject(new SelectFromDatabaseChangeLogLockStatement("LOCKED"), Boolean.class);
+            Boolean locked = ExecutorService.getInstance().getExecutor(database).queryForObject(new SelectFromDatabaseChangeLogLockStatement("LOCKED"), Boolean.class);
 
             if (locked) {
                 return false;

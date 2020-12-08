@@ -34,12 +34,37 @@ public class CreateTableAsSelectGenerator extends AbstractSqlGenerator<CreateTab
 
     @Override
     public Sql[] generateSql(CreateTableAsSelectStatement statement, Database database, SqlGeneratorChain sqlGeneratorChain) {
-        StringBuilder sql = new StringBuilder("CREATE TABLE ").append(database.escapeTableName(statement.getCatalogName(),
-                statement.getSchemaName(), statement.getDestTableName())).append(" AS SELECT ");
+        StringBuilder sql = new StringBuilder("CREATE TABLE ")
+                .append(
+                        database
+                                .escapeTableName(
+                                        statement.getCatalogName(),
+                                        statement.getSchemaName(),
+                                        statement.getDestTableName()
+                                )
+                )
+                .append(" AS SELECT ");
         generateColumnNames(sql, statement, database);
-        sql.append(" FROM ").append(database.escapeTableName(statement.getCatalogName(), statement.getSchemaName(), statement.getTableName()));
+        sql
+                .append(" FROM ")
+                .append(
+                        database.escapeTableName(
+                                statement.getCatalogName(),
+                                statement.getSchemaName(),
+                                statement.getTableName()
+                        )
+                );
         if (statement.getWhereCondition() != null) {
-            sql.append(" WHERE ").append(replacePredicatePlaceholders(database, statement.getWhereCondition(), statement.getWhereColumnNames(), statement.getWhereParameters()));
+            sql
+                    .append(" WHERE ")
+                    .append(
+                            replacePredicatePlaceholders(
+                                    database,
+                                    statement.getWhereCondition(),
+                                    statement.getWhereColumnNames(),
+                                    statement.getWhereParameters()
+                            )
+                    );
         }
         return new Sql[]{new UnparsedSql(sql.toString(), fetchAffectedTable(statement))};
     }

@@ -19,6 +19,7 @@ public class HiveMetastoreDatabase extends AbstractJdbcDatabase {
         this.databaseProductName = databaseProductName;
         this.prefix = prefix;
         this.databaseDriver = driver;
+
     }
 
     @Override

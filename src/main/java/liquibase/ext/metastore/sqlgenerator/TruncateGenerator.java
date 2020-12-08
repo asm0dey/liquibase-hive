@@ -11,6 +11,8 @@ import liquibase.sqlgenerator.core.AbstractSqlGenerator;
 import liquibase.structure.core.Relation;
 import liquibase.structure.core.Table;
 
+import java.text.MessageFormat;
+
 @SuppressWarnings("unused")
 public class TruncateGenerator extends AbstractSqlGenerator<TruncateTableStatement> {
     @Override
@@ -32,8 +34,8 @@ public class TruncateGenerator extends AbstractSqlGenerator<TruncateTableStateme
 
     @Override
     public Sql[] generateSql(TruncateTableStatement statement, Database database, SqlGeneratorChain sqlGeneratorChain) {
-        final String sql = "TRUNCATE TABLE " + database.escapeTableName(statement.getCatalogName(),
-                statement.getSchemaName(), statement.getTableName());
+        final String sql = MessageFormat.format("TRUNCATE TABLE {0}", database.escapeTableName(statement.getCatalogName(),
+                statement.getSchemaName(), statement.getTableName()));
         return new Sql[]{new UnparsedSql(sql, fetchAffectedTable(statement))};
     }
 
