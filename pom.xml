@@ -12,7 +12,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <liquibase.version>3.7.0</liquibase.version>
-        <hive-jdbc.version>3.1.0.3.0.1.0-187</hive-jdbc.version>
+        <hive-jdbc.version>3.1.3000.7.1.4.0-203</hive-jdbc.version>
         <slf4j-api.version>1.7.25</slf4j-api.version>
     </properties>
 
